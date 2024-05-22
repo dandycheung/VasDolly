@@ -50,9 +50,9 @@ class VasDollyPlugin : Plugin<Project> {
         this.project = project
 
         // 检查是否为 android application
-        if (!project.plugins.hasPlugin("com.android.application")) {
+        if (!project.plugins.hasPlugin("com.android.application"))
             throw GradleException("VasDolly plugin 'com.android.application' must be apply")
-        }
+
         // 检查扩展配置（channel/rebuildChannel）
         channelConfigExt =
             project.extensions.create("channel", ChannelConfigExtension::class.java, project)
@@ -78,7 +78,7 @@ class VasDollyPlugin : Plugin<Project> {
         androidComponents.onAllVariants { variant ->
             if (variant is ApplicationVariant) {
                 val variantName = variant.name.capitalize()
-                println("find android build variant name:${variant.name}")
+                println("find android build variant name: ${variant.name}")
                 project.tasks.register("channel$variantName", ApkChannelPackageTask::class.java) {
                     it.variant = variant
                     it.channelExtension = channelConfigExt
@@ -108,12 +108,12 @@ class VasDollyPlugin : Plugin<Project> {
         // 检查是否配置 channels 属性（拥有更高的优先级，一般用于命令行测试用）
         if (project.hasProperty(PROPERTY_CHANNELS)) {
             val channels = project.properties[PROPERTY_CHANNELS] as String
-            if (channels.isNotEmpty()) {
+            if (channels.isNotEmpty())
                 channelList.addAll(channels.split(","))
-            }
-            if (channelList.isEmpty()) {
+
+            if (channelList.isEmpty())
                 throw InvalidUserDataException("Property(${PROPERTY_CHANNELS}) channel list is empty, please fix it")
-            }
+
             println("get project channel list from `channels` property, channels: $channelList")
         } else if (project.hasProperty(PROPERTY_CHANNEL_FILE)) {
             // 检查是否配置 channel_file 属性

@@ -46,7 +46,7 @@ open class ChannelConfigExtension(project: Project) : ConfigExtension(project) {
             outputDir.mkdirs()
 
         if (!outputDir.isDirectory)
-            throw GradleException("channel config outputDir:${outputDir.absolutePath} isn't directory")
+            throw GradleException("channel config outputDir: ${outputDir.absolutePath} isn't directory")
 
         // 清理旧的 apk 文件
         outputDir.listFiles()?.forEach { file ->

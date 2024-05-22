@@ -31,10 +31,7 @@ internal data class SimpleAGPVersion(
                 return null
 
             val parts = version.split('.')
-            if (parts.size == 1)
-                return SimpleAGPVersion(parts[0].toInt(), 0)
-
-            return SimpleAGPVersion(parts[0].toInt(), parts[1].toInt())
+            return SimpleAGPVersion(parts[0].toInt(), if (parts.size == 1) 0 else parts[1].toInt())
         }
     }
 }

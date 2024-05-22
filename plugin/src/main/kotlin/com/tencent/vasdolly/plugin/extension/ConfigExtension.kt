@@ -33,7 +33,7 @@ open class ConfigExtension(var project: Project) {
     var channelFile: File? = null
 
     // 渠道包保持目录
-    var outputDir: File = File(project.buildDir,"channel")
+    var outputDir: File = File(project.buildDir, "channel")
 
     /**
      * 从扩展属性中获取 channelFile 配置的扩展渠道列表
@@ -45,7 +45,7 @@ open class ConfigExtension(var project: Project) {
                 if (channel.isNotEmpty())
                     channelList.add(channel)
             }
-            println("get channels from `channelFile`,channels:$channelList")
+            println("get channels from `channelFile`, channels: $channelList")
         }
         return channelList
     }
