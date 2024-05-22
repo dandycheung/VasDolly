@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 open class ApkChannelPackageTask : ChannelPackageTask() {
-    // 当前基础apk
+    // 当前基础 apk
     @Internal
     var baseApk: File? = null
 
@@ -29,9 +29,9 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
 
     @TaskAction
     fun taskAction() {
-        //1.check all params
+        // 1.check all params
         checkParameter();
-        //2.generate channel apk
+        // 2.generate channel apk
         generateChannelApk();
     }
 
@@ -39,31 +39,28 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      * check channel plugin params
      */
     private fun checkParameter() {
-        if (mergeExtChannelList) {
+        if (mergeExtChannelList)
             mergeChannelList()
-        }
 
-        //1.check channel List
-        if (channelList.isEmpty()) {
-            throw InvalidUserDataException("Task $name channel list is empty,please check it")
-        }
+        // 1.check channel List
+        if (channelList.isEmpty())
+            throw InvalidUserDataException("Task $name channel list is empty, please check it")
+
         println("Task $name, channelList: $channelList")
 
-
-        //2.check base apk
-        if (variant == null) {
+        // 2.check base apk
+        if (variant == null)
             throw InvalidUserDataException("Task $name variant is null")
-        }
+
         baseApk = getVariantBaseApk() ?: throw RuntimeException("can't find base apk")
         println("Task $name, baseApk: ${baseApk?.absolutePath}")
 
-
-        //3.check ChannelExtension
-        if (channelExtension == null) {
+        // 3.check ChannelExtension
+        if (channelExtension == null)
             throw InvalidUserDataException("Task $name channel is null")
-        }
+
         channelExtension?.checkParams()
-        println("Task $name, channel files outputDir:${channelExtension?.outputDir?.absolutePath}")
+        println("Task $name, channel files outputDir: ${channelExtension?.outputDir?.absolutePath}")
     }
 
     @Suppress("PrivateApi")
@@ -72,15 +69,14 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
             val currentAGPVersion = SimpleAGPVersion.ANDROID_GRADLE_PLUGIN_VERSION
             val agpVersion7 = SimpleAGPVersion(7, 0)
             val apkFolder = if (currentAGPVersion < agpVersion7) {
-                //AGP4.2
+                // AGP4.2
                 val artifactCls = Class.forName("com.android.build.api.artifact.ArtifactType")
-                val apkClass =
-                    Class.forName("com.android.build.api.artifact.ArtifactType${'$'}APK").kotlin
+                val apkClass = Class.forName("com.android.build.api.artifact.ArtifactType${'$'}APK").kotlin
                 val provider = variant.artifacts.javaClass.getMethod("get", artifactCls)
                     .invoke(variant.artifacts, apkClass.objectInstance) as Provider<Directory>
                 provider.get()
             } else {
-                //AGP7.0
+                // AGP7.0
                 variant.artifacts.get(SingleArtifact.APK).get()
             }
             variant.artifacts.getBuiltArtifactsLoader().load(apkFolder)?.let {
@@ -94,10 +90,12 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      */
     private fun generateChannelApk() {
         val outputDir = channelExtension?.outputDir
-        println("generateChannelApk baseApk:${baseApk?.absolutePath},outputDir:${outputDir?.path}")
+        println("generateChannelApk baseApk: ${baseApk?.absolutePath}, outputDir: ${outputDir?.path}")
+
         val signingConfig = variant?.signingConfig!!
         val lowMemory = channelExtension?.lowMemory ?: false
         val isFastMode = channelExtension?.fastMode ?: false
+
         when {
             signingConfig.enableV2Signing.get() -> {
                 generateV2ChannelApk(baseApk!!, outputDir!!, lowMemory, isFastMode)
@@ -116,9 +114,9 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      */
     override fun getChannelApkName(baseApkName: String, channel: String): String {
         var timeFormat = ChannelConfigExtension.DEFAULT_DATE_FORMAT
-        if (channelExtension?.buildTimeDateFormat!!.isNotEmpty()) {
+        if (channelExtension?.buildTimeDateFormat!!.isNotEmpty())
             timeFormat = channelExtension?.buildTimeDateFormat!!
-        }
+
         val buildTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(timeFormat))
         val outInfo = variant?.outputs?.first()
 
@@ -131,14 +129,15 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
         keyValue["appId"] = variant?.applicationId?.get() ?: ""
         keyValue["buildTime"] = buildTime
 
-        //默认文件名
+        // 默认文件名
         var apkNamePrefix = ChannelConfigExtension.DEFAULT_APK_NAME_FORMAT
-        if (channelExtension?.apkNameFormat!!.isNotEmpty()) {
+        if (channelExtension?.apkNameFormat!!.isNotEmpty())
             apkNamePrefix = channelExtension?.apkNameFormat!!
-        }
+
         keyValue.forEach { (k, v) ->
             apkNamePrefix = apkNamePrefix.replace("${'$'}{" + k + "}", v)
         }
+
         return "$apkNamePrefix.apk"
     }
 

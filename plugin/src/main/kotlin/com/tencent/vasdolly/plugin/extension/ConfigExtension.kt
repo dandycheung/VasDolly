@@ -20,35 +20,33 @@ import java.io.File
 
 // base config extension class for plugin extension
 open class ConfigExtension(var project: Project) {
-    //only fit v2 signature
-    //低内存模式（仅针对V2签名，默认为false）：
-    //只把签名块、中央目录和EOCD读取到内存，不把最大头的内容块读取到内存
-    //在手机上合成APK时，可以使用该模式
+    // only fit v2 signature
+    // 低内存模式（仅针对 V2 签名，默认为 false）：
+    // 只把签名块、中央目录和 EOCD 读取到内存，不把最大头的内容块读取到内存
+    // 在手机上合成APK时，可以使用该模式
     var lowMemory = false
 
-    //是否为快速模式，即不验证渠道名
+    // 是否为快速模式，即不验证渠道名
     var fastMode = false
 
-    //渠道列表文件
+    // 渠道列表文件
     var channelFile: File? = null
 
-    //渠道包保持目录
+    // 渠道包保持目录
     var outputDir: File = File(project.buildDir,"channel")
 
     /**
-     * 从扩展属性中获取channelFile配置的扩展渠道列表
+     * 从扩展属性中获取 channelFile 配置的扩展渠道列表
      */
     fun getExtensionChannelList(): List<String> {
         val channelList = mutableListOf<String>()
         if (channelFile != null && channelFile?.isFile!! && channelFile?.exists()!!) {
             channelFile?.forEachLine { channel ->
-                if (channel.isNotEmpty()) {
+                if (channel.isNotEmpty())
                     channelList.add(channel)
-                }
             }
             println("get channels from `channelFile`,channels:$channelList")
         }
         return channelList
     }
 }
-

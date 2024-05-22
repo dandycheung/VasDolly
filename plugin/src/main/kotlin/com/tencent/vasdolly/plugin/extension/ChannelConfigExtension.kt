@@ -19,13 +19,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 
 open class ChannelConfigExtension(project: Project) : ConfigExtension(project) {
-
     companion object {
-        //默认文件名模板
+        // 默认文件名模板
         const val DEFAULT_APK_NAME_FORMAT =
             "${'$'}{appName}-${'$'}{versionName}-${'$'}{versionCode}-${'$'}{flavorName}-${'$'}{buildType}-${'$'}{buildTime}"
 
-        //默认时间格式
+        // 默认时间格式
         const val DEFAULT_DATE_FORMAT = "yyyyMMdd-HHmmss"
     }
 
@@ -35,25 +34,24 @@ open class ChannelConfigExtension(project: Project) : ConfigExtension(project) {
     var apkNameFormat = DEFAULT_APK_NAME_FORMAT
 
     /**
-     * buildTime的时间格式
+     * buildTime 的时间格式
      */
     var buildTimeDateFormat = DEFAULT_DATE_FORMAT
 
     /**
-     * 检查channel属性参数
+     * 检查 channel 属性参数
      */
     fun checkParams() {
-        if (!outputDir.exists()) {
+        if (!outputDir.exists())
             outputDir.mkdirs()
-        }
-        if (!outputDir.isDirectory) {
+
+        if (!outputDir.isDirectory)
             throw GradleException("channel config outputDir:${outputDir.absolutePath} isn't directory")
-        }
-        //清理旧的apk文件
+
+        // 清理旧的 apk 文件
         outputDir.listFiles()?.forEach { file ->
-            if (file.name.endsWith(".apk")) {
+            if (file.name.endsWith(".apk"))
                 file.delete()
-            }
         }
     }
 }

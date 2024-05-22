@@ -27,7 +27,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /***
- * VasDolly插件
+ * VasDolly 插件
  * https://developer.android.com/studio/build/extend-agp
  */
 class VasDollyPlugin : Plugin<Project> {
@@ -36,24 +36,24 @@ class VasDollyPlugin : Plugin<Project> {
         const val PROPERTY_CHANNEL_FILE = "channel_file"
     }
 
-    // 当前project
+    // 当前 project
     private lateinit var project: Project
 
     // 渠道配置
     private lateinit var channelConfigExt: ChannelConfigExtension
     private lateinit var rebuildConfigExt: RebuildChannelConfigExtension
 
-    //渠道列表
+    // 渠道列表
     private var channelInfoList: List<String> = listOf()
 
     override fun apply(project: Project) {
         this.project = project
 
-        //检查是否为android application
+        // 检查是否为 android application
         if (!project.plugins.hasPlugin("com.android.application")) {
             throw GradleException("VasDolly plugin 'com.android.application' must be apply")
         }
-        //检查扩展配置（channel/rebuildChannel）
+        // 检查扩展配置（channel/rebuildChannel）
         channelConfigExt =
             project.extensions.create("channel", ChannelConfigExtension::class.java, project)
         rebuildConfigExt = project.extensions.create(
@@ -62,10 +62,10 @@ class VasDollyPlugin : Plugin<Project> {
             project
         )
 
-        //获取全局工程中配置的渠道列表（gradle.properties文件指定渠道属性）
+        // 获取全局工程中配置的渠道列表（gradle.properties 文件指定渠道属性）
         channelInfoList = getChannelList()
 
-        //添加扩展渠道任务
+        // 添加扩展渠道任务
         createChannelTask()
     }
 
@@ -89,8 +89,8 @@ class VasDollyPlugin : Plugin<Project> {
             }
         }
 
-        //重新生成渠道包
-        project.tasks.register("reBuildChannel", RebuildApkChannelPackageTask::class.java) {
+        // 重新生成渠道包
+        project.tasks.register("rebuildChannel", RebuildApkChannelPackageTask::class.java) {
             it.mergeExtChannelList = !project.hasProperty(PROPERTY_CHANNELS)
             it.channelList.addAll(channelInfoList)
             it.rebuildExt = rebuildConfigExt
@@ -98,25 +98,25 @@ class VasDollyPlugin : Plugin<Project> {
     }
 
     /**
-     * 获取gradle.properties中配置的渠道列表
-     * 从v2.0.0开始支持添加渠道参数：
+     * 获取 gradle.properties 中配置的渠道列表
+     * 从 v2.0.0 开始支持添加渠道参数：
      *    gradle rebuildChannel -Pchannels=yingyongbao,gamecenter
-     *  这里通过属性channels指定的渠道列表拥有更高的优先级，且和原始的文件方式channel_file是互斥的
+     *  这里通过属性 channels 指定的渠道列表拥有更高的优先级，且和原始的文件方式 channel_file 是互斥的
      */
     private fun getChannelList(): List<String> {
         val channelList = mutableListOf<String>()
-        //检查是否配置channels属性(拥有更高的优先级,一般用于命令行测试用)
+        // 检查是否配置 channels 属性（拥有更高的优先级，一般用于命令行测试用）
         if (project.hasProperty(PROPERTY_CHANNELS)) {
             val channels = project.properties[PROPERTY_CHANNELS] as String
             if (channels.isNotEmpty()) {
                 channelList.addAll(channels.split(","))
             }
             if (channelList.isEmpty()) {
-                throw InvalidUserDataException("Property(${PROPERTY_CHANNELS}) channel list is empty , please fix it")
+                throw InvalidUserDataException("Property(${PROPERTY_CHANNELS}) channel list is empty, please fix it")
             }
-            println("get project channel list from `channels` property,channels:$channelList")
+            println("get project channel list from `channels` property, channels: $channelList")
         } else if (project.hasProperty(PROPERTY_CHANNEL_FILE)) {
-            //检查是否配置channel_file属性
+            // 检查是否配置 channel_file 属性
             val channelFilePath = project.properties[PROPERTY_CHANNEL_FILE] as String
             if (channelFilePath.isNotEmpty()) {
                 val channelFile = project.rootProject.file(channelFilePath)
@@ -126,7 +126,7 @@ class VasDollyPlugin : Plugin<Project> {
                     }
                 }
             }
-            println("get project channel list from `channel_file` property,file:$channelFilePath,channels:$channelList")
+            println("get project channel list from `channel_file` property, file: $channelFilePath, channels: $channelList")
         }
         return channelList
     }

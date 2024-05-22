@@ -28,7 +28,6 @@ import org.gradle.api.Project
  * - In AGP 7.0 its packages is 'com.android.build.api.variant'
  */
 sealed class AndroidComponentsExtensionCompat {
-
     /**
      * A combined compatibility function of
      * [com.android.build.api.variant.AndroidComponentsExtension.onVariants] that includes also
@@ -49,7 +48,6 @@ sealed class AndroidComponentsExtensionCompat {
 
     // AGP4.2
     class Api42Impl(private val actual: Any) : AndroidComponentsExtensionCompat() {
-
         private val extensionClazz =
             Class.forName("com.android.build.api.extension.AndroidComponentsExtension")
 
@@ -65,7 +63,6 @@ sealed class AndroidComponentsExtensionCompat {
             extensionClazz.getDeclaredMethod(
                 "onVariants", variantSelectorClazz, Function1::class.java
             ).invoke(actual, allSelector, wrapFunction)
-
         }
     }
 
@@ -74,12 +71,11 @@ sealed class AndroidComponentsExtensionCompat {
             return if (
                 findClass("com.android.build.api.variant.AndroidComponentsExtension") != null
             ) {
-                //AGP7.0
-                val actualExtension =
-                    project.extensions.getByType(AndroidComponentsExtension::class.java)
+                // AGP7.0
+                val actualExtension = project.extensions.getByType(AndroidComponentsExtension::class.java)
                 Api70Impl(actualExtension)
             } else {
-                //AGP4.2
+                // AGP4.2
                 val clsName = "com.android.build.api.extension.AndroidComponentsExtension"
                 val actualExtension = project.extensions.getByType(Class.forName(clsName))
                 Api42Impl(actualExtension)
