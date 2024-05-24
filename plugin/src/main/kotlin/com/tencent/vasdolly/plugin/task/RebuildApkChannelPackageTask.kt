@@ -18,13 +18,17 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
 
     @TaskAction
     fun taskAction() {
-        // 1.check all params
-        checkParameter();
-        // 2.generate channel apk
-        generateChannelApk(rebuildExt?.baseApk, rebuildExt?.outputDir)
+        // check rebuildChannelExtension
+        if (rebuildExt == null)
+            throw InvalidUserDataException("Task $name rebuildExt is null, you are joke!")
+
+        // 如果用户把 baseApk 和 baseMap 都配置了，是 1+1 呢？还是 2 选 1？前者好一点吧，毕竟想“我都要”
+        // 的人应该会多一些
+        processBaseApk()
+        processBaseApks()
     }
 
-    private fun checkParameter() {
+    private fun processBaseApk() {
         // merge channel list
         if (mergeExtChannelList)
             mergeChannelList()
@@ -35,15 +39,29 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
 
         println("Task $name, channelList: $channelList")
 
-        // 4.check ChannelExtension
-        if (rebuildExt == null)
-            throw InvalidUserDataException("Task $name rebuildExt is null, you are joke!")
+        // 2.generate channel apk
+        generateChannelApkSingle(rebuildExt?.baseApk, rebuildExt?.outputDir)
+    }
+
+    private fun processBaseApks() {
+        if (rebuildExt?.baseMap == null)
+            return
+
+        val baseMap: Map<File, File> = rebuildExt?.baseMap!!
+        baseMap.forEach { (apk, channels) ->
+            val channelList = rebuildExt?.getExtensionChannelList(channels) ?: listOf()
+            generateChannelApk(apk, rebuildExt?.outputDir, channelList)
+        }
     }
 
     /***
      * 生成渠道包
      */
-    private fun generateChannelApk(baseApk: File?, outputDir: File?) {
+    private fun generateChannelApkSingle(baseApk: File?, outputDir: File?) {
+        generateChannelApk(baseApk, outputDir, channelList)
+    }
+
+    private fun generateChannelApk(baseApk: File?, outputDir: File?, channelList: List<String>) {
         println("generateChannelApk baseApk: ${baseApk?.absolutePath}, outputDir: ${outputDir?.path}")
 
         val lowMemory = rebuildExt?.lowMemory ?: false
@@ -68,9 +86,9 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
 
             // 开始生成渠道包
             if (ChannelReader.containV2Signature(baseApk))
-                generateV2ChannelApk(baseApk, outputDir, lowMemory, isFastMode)
+                generateV2ChannelApk(baseApk, outputDir, lowMemory, isFastMode, channelList)
             else if (ChannelReader.containV1Signature(baseApk))
-                generateV1ChannelApk(baseApk, outputDir, isFastMode)
+                generateV1ChannelApk(baseApk, outputDir, isFastMode, channelList)
         } ?: throw GradleException("rebuild apk channel outputDir is empty")
     }
 

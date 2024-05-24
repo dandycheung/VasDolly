@@ -33,13 +33,13 @@ abstract class ChannelPackageTask : DefaultTask() {
     /**
      * 生成 V2 渠道包
      */
-    fun generateV2ChannelApk(
-        baseApk: File,
-        outputDir: File,
-        lowMemory: Boolean,
-        isFastMode: Boolean
-    ) {
+    fun generateV2ChannelApk(baseApk: File, outputDir: File, lowMemory: Boolean, isFastMode: Boolean) {
+        generateV2ChannelApk(baseApk, outputDir, lowMemory, isFastMode, channelList)
+    }
+
+    fun generateV2ChannelApk(baseApk: File, outputDir: File, lowMemory: Boolean, isFastMode: Boolean, channelList: List<String>) {
         println("------ $project.name: $name generate v2 channel apk, begin ------")
+
         val apkSectionInfo = IdValueWriter.getApkSectionInfo(baseApk, lowMemory)
         channelList.forEach { channel ->
             val apkChannelName = getChannelApkName(baseApk.name, channel)
@@ -79,12 +79,16 @@ abstract class ChannelPackageTask : DefaultTask() {
      * 生成 V1 渠道包
      */
     fun generateV1ChannelApk(baseApk: File, outputDir: File, isFastMode: Boolean) {
+        generateV1ChannelApk(baseApk, outputDir, isFastMode, channelList)
+    }
+
+    fun generateV1ChannelApk(baseApk: File, outputDir: File, isFastMode: Boolean, channelList: List<String>) {
         // check v1 signature, if not have v1 signature, you can't install Apk below 7.0
         println("------ $project.name: $name generate v1 channel apk, begin ------")
 
         if (!ChannelReader.containV1Signature(baseApk)) {
             val msg =
-                "$name get signing config apk ${baseApk.absolutePath} not signed by v1,you can't install Apk below Android7.0"
+                "$name get signing config apk ${baseApk.absolutePath} not signed by v1, you can't install Apk below Android7.0"
             throw GradleException(msg)
         }
 

@@ -25,6 +25,11 @@ open class RebuildChannelConfigExtension(project: Project) : ConfigExtension(pro
      */
     var baseApk: File? = null
 
+    // 这是新增的另外一种形式的任务信息源，map 中的每一项，key 是 apk 文件的文件对象，value 是相应的渠道
+    // 列表文件的文件对象。原则上，对于用户，直接指定路径会更简单，但是由于原始实现的 baseApk 属性就是文件
+    // 对象，为了保持风格一致，顺便减少一些文件存在与否的校验判断，故遵循现有风格
+    var baseMap: Map<File, File>? = null
+
     init {
         outputDir = File(project.buildDir, "rebuildChannel")
     }

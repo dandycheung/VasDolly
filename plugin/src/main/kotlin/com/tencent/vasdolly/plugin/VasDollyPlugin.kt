@@ -25,6 +25,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import java.util.Locale
 
 /***
  * VasDolly 插件
@@ -44,26 +45,23 @@ class VasDollyPlugin : Plugin<Project> {
     private lateinit var rebuildConfigExt: RebuildChannelConfigExtension
 
     // 渠道列表
-    private var channelInfoList: List<String> = listOf()
+    private var channelList: List<String> = listOf()
 
     override fun apply(project: Project) {
         this.project = project
 
-        // 检查是否为 android application
+        // 检查是否为 android application。事实上，对于仅有 rebuildChannel 任务的情况，这不是必须的
         if (!project.plugins.hasPlugin("com.android.application"))
-            throw GradleException("VasDolly plugin 'com.android.application' must be apply")
+            throw GradleException("VasDolly: plugin 'com.android.application' must be applied")
 
         // 检查扩展配置（channel/rebuildChannel）
-        channelConfigExt =
-            project.extensions.create("channel", ChannelConfigExtension::class.java, project)
+        channelConfigExt = project.extensions.create(
+            "channel", ChannelConfigExtension::class.java, project)
         rebuildConfigExt = project.extensions.create(
-            "rebuildChannel",
-            RebuildChannelConfigExtension::class.java,
-            project
-        )
+            "rebuildChannel", RebuildChannelConfigExtension::class.java, project)
 
         // 获取全局工程中配置的渠道列表（gradle.properties 文件指定渠道属性）
-        channelInfoList = getChannelList()
+        channelList = getChannelList()
 
         // 添加扩展渠道任务
         createChannelTask()
@@ -77,12 +75,12 @@ class VasDollyPlugin : Plugin<Project> {
             AndroidComponentsExtensionCompat.getAndroidComponentsExtension(project)
         androidComponents.onAllVariants { variant ->
             if (variant is ApplicationVariant) {
-                val variantName = variant.name.capitalize()
-                println("find android build variant name: ${variant.name}")
+                val variantName = variant.name.capitalize(Locale.ROOT)
+                println("VasDolly: build variant found: ${variant.name}")
                 project.tasks.register("channel$variantName", ApkChannelPackageTask::class.java) {
                     it.variant = variant
                     it.channelExtension = channelConfigExt
-                    it.channelList.addAll(channelInfoList)
+                    it.channelList.addAll(channelList)
                     it.mergeExtChannelList = !project.hasProperty(PROPERTY_CHANNELS)
                     it.dependsOn("assemble$variantName")
                 }
@@ -92,7 +90,7 @@ class VasDollyPlugin : Plugin<Project> {
         // 重新生成渠道包
         project.tasks.register("rebuildChannel", RebuildApkChannelPackageTask::class.java) {
             it.mergeExtChannelList = !project.hasProperty(PROPERTY_CHANNELS)
-            it.channelList.addAll(channelInfoList)
+            it.channelList.addAll(channelList)
             it.rebuildExt = rebuildConfigExt
         }
     }
@@ -101,12 +99,12 @@ class VasDollyPlugin : Plugin<Project> {
      * 获取 gradle.properties 中配置的渠道列表
      * 从 v2.0.0 开始支持添加渠道参数：
      *    gradle rebuildChannel -Pchannels=yingyongbao,gamecenter
-     *  这里通过属性 channels 指定的渠道列表拥有更高的优先级，且和原始的文件方式 channel_file 是互斥的
+     * 这里通过属性 channels 指定的渠道列表拥有更高的优先级，且和原始的文件方式 channel_file 是互斥的
      */
     private fun getChannelList(): List<String> {
         val channelList = mutableListOf<String>()
-        // 检查是否配置 channels 属性（拥有更高的优先级，一般用于命令行测试用）
-        if (project.hasProperty(PROPERTY_CHANNELS)) {
+
+        if (project.hasProperty(PROPERTY_CHANNELS)) { // 检查 channels 属性（优先，一般用于命令行测试用）
             val channels = project.properties[PROPERTY_CHANNELS] as String
             if (channels.isNotEmpty())
                 channelList.addAll(channels.split(","))
@@ -114,9 +112,8 @@ class VasDollyPlugin : Plugin<Project> {
             if (channelList.isEmpty())
                 throw InvalidUserDataException("Property(${PROPERTY_CHANNELS}) channel list is empty, please fix it")
 
-            println("get project channel list from `channels` property, channels: $channelList")
-        } else if (project.hasProperty(PROPERTY_CHANNEL_FILE)) {
-            // 检查是否配置 channel_file 属性
+            println("VasDolly: channels (from `channels` property): $channelList")
+        } else if (project.hasProperty(PROPERTY_CHANNEL_FILE)) { // 检查 channel_file 属性
             val channelFilePath = project.properties[PROPERTY_CHANNEL_FILE] as String
             if (channelFilePath.isNotEmpty()) {
                 val channelFile = project.rootProject.file(channelFilePath)
@@ -126,8 +123,9 @@ class VasDollyPlugin : Plugin<Project> {
                     }
                 }
             }
-            println("get project channel list from `channel_file` property, file: $channelFilePath, channels: $channelList")
+            println("VasDolly: channels (from file $channelFilePath that `channel_file` property specified): $channelList")
         }
+
         return channelList
     }
 }
