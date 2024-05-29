@@ -5,7 +5,7 @@ ext {
     targetSdkVersion = compileSdkVersion
     buildToolsVersion = '31.0.0'
 
-    //VasDolly插件版本信息
+    // VasDolly 插件版本信息
     GROUP = 'com.tencent.vasdolly'
     VERSION = '3.0.6'
 }
@@ -16,6 +16,7 @@ buildscript {
         mavenCentral()
         google()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:4.2.2'
     }
@@ -29,8 +30,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
-
-

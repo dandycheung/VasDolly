@@ -26,7 +26,6 @@ afterEvaluate {
                     from components.java
                 }
 
-
                 pom {
                     name = POM_NAME
                     artifactId = POM_ARTIFACT_ID
@@ -38,12 +37,12 @@ afterEvaluate {
                     }
 
                     developers {
-                        developer { //developer info
+                        developer { // developer info
                             id = 'leon'
                             name = 'leon'
                             email = 'ltlovezh@gmail.com'
                         }
-                        developer { //developer info
+                        developer { // developer info
                             id = 'yanyongshan'
                             name = 'yanyongshan'
                             email = 'wecityyan@tencent.com'
@@ -53,13 +52,15 @@ afterEvaluate {
             }
         }
 
-        //发布仓库
-        //仓库地址：https://repo.maven.apache.org/maven2/com/tencent/vasdolly/
+        // 发布仓库
+        // 仓库地址：https://repo.maven.apache.org/maven2/com/tencent/vasdolly/
         repositories {
             maven {
                 def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
                 def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+
                 url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
                 credentials {
                     username = properties.getProperty("ossrhUsername")
                     password = properties.getProperty("ossrhPassword")

@@ -1,8 +1,9 @@
 plugins {
     id 'java'
     id "java-gradle-plugin"
-    id 'org.jetbrains.kotlin.jvm' version "1.4.32"
+    id 'org.jetbrains.kotlin.jvm' version "1.5.30"
 }
+
 apply from: rootProject.file("maven.gradle")
 
 dependencies {
@@ -10,14 +11,15 @@ dependencies {
     api project(':writer')
     api project(':reader')
     api project(':verify')
-    //implementation gradleApi()
+    // implementation gradleApi()
     compileOnly "com.android.tools.build:gradle:7.0.2"
 }
 
-// 一定要记得使用交叉编译选项，因为我们可能用很高的JDK版本编译，为了让安装了低版本的同学能用上我们写的插件，必须设定source和target
+// 一定要记得使用交叉编译选项！
+// 因为可能用高版本的 JDK 编译，为了让安装了低版本的同学能用插件，必须设定 source 和 target
 java {
-    targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 // https://developer.android.com/studio/build/extend-agp

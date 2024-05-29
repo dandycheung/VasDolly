@@ -75,7 +75,10 @@ class VasDollyPlugin : Plugin<Project> {
             AndroidComponentsExtensionCompat.getAndroidComponentsExtension(project)
         androidComponents.onAllVariants { variant ->
             if (variant is ApplicationVariant) {
-                val variantName = variant.name.capitalize(Locale.ROOT)
+                val variantName = variant.name.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.ROOT)
+                    else it.toString()
+                }
                 println("VasDolly: build variant found: ${variant.name}")
                 project.tasks.register("channel$variantName", ApkChannelPackageTask::class.java) {
                     it.variant = variant
