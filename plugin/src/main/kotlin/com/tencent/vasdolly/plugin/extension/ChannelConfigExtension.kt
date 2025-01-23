@@ -39,9 +39,9 @@ open class ChannelConfigExtension(project: Project) : ConfigExtension(project) {
     var buildTimeDateFormat = DEFAULT_DATE_FORMAT
 
     /**
-     * 检查 channel 属性参数
+     * 为生成渠道包做准备工作
      */
-    fun checkParams() {
+    fun prepare() {
         if (!outputDir.exists())
             outputDir.mkdirs()
 

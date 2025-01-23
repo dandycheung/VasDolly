@@ -9,7 +9,6 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -29,37 +28,37 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
 
     @TaskAction
     fun taskAction() {
-        // 1.check all params
-        checkParameter();
-        // 2.generate channel apk
+        // 1. check all params
+        sanityCheck();
+        // 2. generate channel apk
         generateChannelApk();
     }
 
     /***
-     * check channel plugin params
+     * check channel plugin parameters
      */
-    private fun checkParameter() {
+    private fun sanityCheck() {
         if (mergeExtChannelList)
             mergeChannelList()
 
-        // 1.check channel List
+        // 1. check channel List
         if (channelList.isEmpty())
             throw InvalidUserDataException("Task $name channel list is empty, please check it")
 
         println("Task $name, channelList: $channelList")
 
-        // 2.check base apk
+        // 2. check base apk
         if (variant == null)
             throw InvalidUserDataException("Task $name variant is null")
 
         baseApk = getVariantBaseApk() ?: throw RuntimeException("can't find base apk")
         println("Task $name, baseApk: ${baseApk?.absolutePath}")
 
-        // 3.check ChannelExtension
+        // 3. check ChannelExtension
         if (channelExtension == null)
             throw InvalidUserDataException("Task $name channel is null")
 
-        channelExtension?.checkParams()
+        channelExtension?.prepare()
         println("Task $name, channel files outputDir: ${channelExtension?.outputDir?.absolutePath}")
     }
 
@@ -120,25 +119,25 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
         val buildTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(timeFormat))
         val outInfo = variant?.outputs?.first()
 
-        val keyValue: MutableMap<String, String> = mutableMapOf()
-        keyValue["appName"] = project.name
-        keyValue["flavorName"] = channel
-        keyValue["buildType"] = variant?.buildType ?: ""
-        keyValue["versionName"] = outInfo?.versionName?.get() ?: ""
-        keyValue["versionCode"] = outInfo?.versionCode?.get().toString()
-        keyValue["appId"] = variant?.applicationId?.get() ?: ""
-        keyValue["buildTime"] = buildTime
+        val values: MutableMap<String, String> = mutableMapOf()
+        values["appName"] = project.name
+        values["flavorName"] = channel
+        values["buildType"] = variant?.buildType ?: ""
+        values["versionName"] = outInfo?.versionName?.get() ?: ""
+        values["versionCode"] = outInfo?.versionCode?.get().toString()
+        values["appId"] = variant?.applicationId?.get() ?: ""
+        values["buildTime"] = buildTime
 
         // 默认文件名
-        var apkNamePrefix = ChannelConfigExtension.DEFAULT_APK_NAME_FORMAT
+        var apkName = ChannelConfigExtension.DEFAULT_APK_NAME_FORMAT
         if (channelExtension?.apkNameFormat!!.isNotEmpty())
-            apkNamePrefix = channelExtension?.apkNameFormat!!
+            apkName = channelExtension?.apkNameFormat!!
 
-        keyValue.forEach { (k, v) ->
-            apkNamePrefix = apkNamePrefix.replace("${'$'}{" + k + "}", v)
+        values.forEach { (k, v) ->
+            apkName = apkName.replace("${'$'}{" + k + "}", v)
         }
 
-        return "$apkNamePrefix.apk"
+        return "$apkName.apk"
     }
 
     /***

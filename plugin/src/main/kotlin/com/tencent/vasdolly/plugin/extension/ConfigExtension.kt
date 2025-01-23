@@ -51,6 +51,6 @@ open class ConfigExtension(var project: Project) {
             }
             println("get channels from `channelFile`, channels: $channelList")
         }
-        return channelList
+        return channelList.distinct() // 去重
     }
 }

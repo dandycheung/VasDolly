@@ -33,13 +33,13 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
         if (mergeExtChannelList)
             mergeChannelList()
 
-        // 1.check channel List
+        // 1. check channel List
         if (channelList.isEmpty())
             throw InvalidUserDataException("Task $name channel list is empty, please check it")
 
         println("Task $name, channelList: $channelList")
 
-        // 2.generate channel apk
+        // 2. generate channel apk
         generateChannelApkSingle(rebuildExt?.baseApk, rebuildExt?.outputDir)
     }
 
@@ -99,7 +99,7 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
         return if (baseApkName.contains("base"))
             baseApkName.replace("base", channel)
         else
-            "$channel-$baseApkName";
+            "$channel-$baseApkName"
     }
 
     override fun getExtensionChannelList(): List<String> {
