@@ -134,7 +134,7 @@ public class ChannelWriter {
         List<Integer> idList = new ArrayList<>();
         idList.add(ChannelConstants.CHANNEL_BLOCK_ID);
         IdValueWriter.removeIdValue(apkSectionInfo, destApk, idList);
-        apkSectionInfo.checkParamters();
+        apkSectionInfo.checkParameters();
     }
 
 
