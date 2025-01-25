@@ -16,9 +16,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 open class ApkChannelPackageTask : ChannelPackageTask() {
-    // 当前基础 apk
     @Internal
-    var baseApk: File? = null
+    var baseApk: File? = null // 当前基础 apk
 
     @get:Input
     var variant: ApplicationVariant? = null
@@ -29,37 +28,51 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
     @TaskAction
     fun taskAction() {
         // 1. check all params
-        sanityCheck();
+        if (!sanityCheck())
+            return
+
         // 2. generate channel apk
-        generateChannelApk();
+        generateChannelApk()
     }
 
     /***
      * check channel plugin parameters
      */
-    private fun sanityCheck() {
+    private fun sanityCheck(): Boolean {
         if (mergeExtChannelList)
             mergeChannelList()
 
         // 1. check channel List
-        if (channelList.isEmpty())
-            throw InvalidUserDataException("Task $name channel list is empty, please check it")
+        if (channelList.isEmpty()) {
+            println("Task $name: channel list is empty, please check it")
+            return false
+        }
 
-        println("Task $name, channelList: $channelList")
+        println("Task $name: channelList: $channelList")
 
         // 2. check base apk
-        if (variant == null)
-            throw InvalidUserDataException("Task $name variant is null")
+        if (variant == null) {
+            println("Task $name: variant is null")
+            return false
+        }
 
-        baseApk = getVariantBaseApk() ?: throw RuntimeException("can't find base apk")
-        println("Task $name, baseApk: ${baseApk?.absolutePath}")
+        baseApk = getVariantBaseApk()
+        if (baseApk == null) {
+            println("Task $name: can't find base apk")
+            return false
+        }
+
+        println("Task $name: baseApk: ${baseApk?.absolutePath}")
 
         // 3. check ChannelExtension
-        if (channelExtension == null)
-            throw InvalidUserDataException("Task $name channel is null")
+        if (channelExtension == null) {
+            println("Task $name: channel is null")
+            return false
+        }
 
         channelExtension?.prepare()
-        println("Task $name, channel files outputDir: ${channelExtension?.outputDir?.absolutePath}")
+        println("Task $name: channel files outputDir: ${channelExtension?.outputDir?.absolutePath}")
+        return true
     }
 
     @Suppress("PrivateApi")
