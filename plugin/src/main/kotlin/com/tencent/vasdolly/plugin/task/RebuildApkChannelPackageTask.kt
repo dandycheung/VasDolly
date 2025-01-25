@@ -2,8 +2,6 @@ package com.tencent.vasdolly.plugin.task
 
 import com.tencent.vasdolly.plugin.extension.RebuildChannelConfigExtension
 import com.tencent.vasdolly.reader.ChannelReader
-import org.gradle.api.GradleException
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -19,8 +17,10 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
     @TaskAction
     fun taskAction() {
         // check rebuildChannelExtension
-        if (rebuildExt == null)
-            throw InvalidUserDataException("Task $name rebuildExt is null, you are joke!")
+        if (rebuildExt == null) {
+            println("Task $name: rebuildExt is null, you are joke!")
+            return
+        }
 
         // 如果用户把 baseApk 和 baseMap 都配置了，是 1+1 呢？还是 2 选 1？前者好一点吧，毕竟想“我都要”
         // 的人应该会多一些
@@ -76,22 +76,25 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
         }
 
         // 检查是否有输出目录
-        outputDir?.let { outDir ->
-            if (!outDir.exists())
-                outDir.mkdirs()
+        if (outputDir == null) {
+            println("rebuild apk channel outputDir is empty")
+            return
+        }
 
-            // 清空输出目录下已经存在的 apk
-            outDir.listFiles()?.forEach { file ->
-                if (file.name.endsWith(".apk"))
-                    file.delete()
-            }
+        if (!outputDir.exists())
+            outputDir.mkdirs()
 
-            // 开始生成渠道包
-            if (ChannelReader.containV2Signature(baseApk))
-                generateV2ChannelApk(baseApk, outputDir, lowMemory, isFastMode, channelList)
-            else if (ChannelReader.containV1Signature(baseApk))
-                generateV1ChannelApk(baseApk, outputDir, isFastMode, channelList)
-        } ?: throw GradleException("rebuild apk channel outputDir is empty")
+        // 清空输出目录下已经存在的 apk
+        outputDir.listFiles()?.forEach { file ->
+            if (file.name.endsWith(".apk"))
+                file.delete()
+        }
+
+        // 开始生成渠道包
+        if (ChannelReader.containV2Signature(baseApk))
+            generateV2ChannelApk(baseApk, outputDir, lowMemory, isFastMode, channelList)
+        else if (ChannelReader.containV1Signature(baseApk))
+            generateV1ChannelApk(baseApk, outputDir, isFastMode, channelList)
     }
 
     /**

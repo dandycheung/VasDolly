@@ -4,8 +4,6 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.tencent.vasdolly.plugin.extension.ChannelConfigExtension
 import com.tencent.vasdolly.plugin.util.SimpleAGPVersion
-import org.gradle.api.GradleException
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -84,6 +82,7 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
                 // AGP4.2
                 val artifactCls = Class.forName("com.android.build.api.artifact.ArtifactType")
                 val apkClass = Class.forName("com.android.build.api.artifact.ArtifactType${'$'}APK").kotlin
+                @Suppress("UNCHECKED_CAST")
                 val provider = variant.artifacts.javaClass.getMethod("get", artifactCls)
                     .invoke(variant.artifacts, apkClass.objectInstance) as Provider<Directory>
                 provider.get()
@@ -116,7 +115,7 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
                 generateV1ChannelApk(baseApk!!, outputDir!!, isFastMode)
             }
             else -> {
-                throw GradleException("not have precise channel package mode");
+                println("not have precise channel package mode")
             }
         }
     }
