@@ -10,7 +10,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import java.io.File
 
-abstract class ChannelPackageTask : DefaultTask() {
+abstract class BaseTask : DefaultTask() {
     @Input
     var mergeExtChannelList: Boolean = true
 
@@ -22,12 +22,34 @@ abstract class ChannelPackageTask : DefaultTask() {
     }
 
     /***
-     * 合并渠道列表
+     * 处理渠道列表
+     * 当前唯一操作是“合并”，后续考虑 mergeExtChannelList 为 false 是作为“替换”的可能）
      */
-    fun mergeChannelList() {
+    fun processChannelList() {
+        if (!mergeExtChannelList)
+            return
+
         val extensionChannelList = getExtensionChannelList()
         if (extensionChannelList.isNotEmpty())
             channelList.addAll(extensionChannelList)
+    }
+
+    /**
+     * 为生成渠道包做准备工作
+     */
+    fun prepare(outputDir: File) {
+        // 确保输出目录可用
+        if (!outputDir.exists())
+            outputDir.mkdirs()
+
+        if (!outputDir.isDirectory)
+            throw GradleException("channel config outputDir: ${outputDir.absolutePath} isn't directory")
+
+        // 清理旧的 apk 文件（如果存在的话）
+        outputDir.listFiles()?.forEach { file ->
+            if (file.name.endsWith(".apk"))
+                file.delete()
+        }
     }
 
     /**

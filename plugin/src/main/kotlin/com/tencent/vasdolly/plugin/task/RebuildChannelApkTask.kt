@@ -1,6 +1,6 @@
 package com.tencent.vasdolly.plugin.task
 
-import com.tencent.vasdolly.plugin.extension.RebuildChannelConfigExtension
+import com.tencent.vasdolly.plugin.extension.RebuildChannelApkConfig
 import com.tencent.vasdolly.reader.ChannelReader
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
@@ -9,29 +9,24 @@ import java.io.File
 /***
  * 根据已有基础包重新生成多渠道包
  */
-open class RebuildApkChannelPackageTask : ChannelPackageTask() {
-    // 根据已有基础包重新生成多渠道包
+open class RebuildChannelApkTask : BaseTask() {
     @get:Input
-    var rebuildExt: RebuildChannelConfigExtension? = null
+    var config: RebuildChannelApkConfig? = null
 
     @TaskAction
     fun taskAction() {
-        // check rebuildChannelExtension
-        if (rebuildExt == null) {
-            println("Task $name: rebuildExt is null, you are joke!")
+        if (config == null) {
+            println("Task $name: config is missing, please check it")
             return
         }
 
-        // 如果用户把 baseApk 和 baseMap 都配置了，是 1+1 呢？还是 2 选 1？前者好一点吧，毕竟想“我都要”
-        // 的人应该会多一些
+        // 如果用户把 baseApk 和 baseMap 都配置了，就都处理；平滑兼容原有功能
         processBaseApk()
         processBaseApks()
     }
 
     private fun processBaseApk() {
-        // merge channel list
-        if (mergeExtChannelList)
-            mergeChannelList()
+        processChannelList()
 
         // 1. check channel List
         if (channelList.isEmpty()) {
@@ -42,17 +37,17 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
         println("Task $name: channelList: $channelList")
 
         // 2. generate channel apk
-        generateChannelApkSingle(rebuildExt?.baseApk, rebuildExt?.outputDir)
+        generateChannelApkSingle(config?.baseApk, config?.outputDir)
     }
 
     private fun processBaseApks() {
-        if (rebuildExt?.baseMap == null)
+        if (config?.baseMap == null)
             return
 
-        val baseMap: Map<File, File> = rebuildExt?.baseMap!!
+        val baseMap: Map<File, File> = config?.baseMap!!
         baseMap.forEach { (apk, channels) ->
-            val channelList = rebuildExt?.getExtensionChannelList(channels) ?: listOf()
-            generateChannelApk(apk, rebuildExt?.outputDir, channelList)
+            val channelList = config?.getChannelList(channels) ?: listOf()
+            generateChannelApk(apk, config?.outputDir, channelList)
         }
     }
 
@@ -66,12 +61,12 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
     private fun generateChannelApk(baseApk: File?, outputDir: File?, channelList: List<String>) {
         println("generateChannelApk baseApk: ${baseApk?.absolutePath}, outputDir: ${outputDir?.path}")
 
-        val lowMemory = rebuildExt?.lowMemory ?: false
-        val isFastMode = rebuildExt?.fastMode ?: false
+        val lowMemory = config?.lowMemory ?: false
+        val isFastMode = config?.fastMode ?: false
 
         // 校验 baseApk
         if (baseApk == null || !baseApk.exists() || !baseApk.isFile) {
-            println("baseApk: $baseApk, it is not a valid file, so can not rebuild channel apk")
+            println("baseApk ($baseApk) is not a valid file, so can not rebuild channel apk")
             return
         }
 
@@ -81,14 +76,7 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
             return
         }
 
-        if (!outputDir.exists())
-            outputDir.mkdirs()
-
-        // 清空输出目录下已经存在的 apk
-        outputDir.listFiles()?.forEach { file ->
-            if (file.name.endsWith(".apk"))
-                file.delete()
-        }
+        prepare(outputDir)
 
         // 开始生成渠道包
         if (ChannelReader.containV2Signature(baseApk))
@@ -107,7 +95,10 @@ open class RebuildApkChannelPackageTask : ChannelPackageTask() {
             "$channel-$baseApkName"
     }
 
+    /***
+     * 获取渠道列表
+     */
     override fun getExtensionChannelList(): List<String> {
-        return rebuildExt?.getExtensionChannelList() ?: listOf()
+        return config?.getChannelList() ?: listOf()
     }
 }

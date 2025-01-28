@@ -2,7 +2,7 @@ package com.tencent.vasdolly.plugin.task
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
-import com.tencent.vasdolly.plugin.extension.ChannelConfigExtension
+import com.tencent.vasdolly.plugin.extension.BuildChannelApkConfig
 import com.tencent.vasdolly.plugin.util.SimpleAGPVersion
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -13,7 +13,7 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-open class ApkChannelPackageTask : ChannelPackageTask() {
+open class BuildChannelApkTask : BaseTask() {
     @Internal
     var baseApk: File? = null // 当前基础 apk
 
@@ -21,7 +21,7 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
     var variant: ApplicationVariant? = null
 
     @get:Input
-    var channelExtension: ChannelConfigExtension? = null
+    var config: BuildChannelApkConfig? = null
 
     @TaskAction
     fun taskAction() {
@@ -37,8 +37,7 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      * check channel plugin parameters
      */
     private fun sanityCheck(): Boolean {
-        if (mergeExtChannelList)
-            mergeChannelList()
+        processChannelList()
 
         // 1. check channel List
         if (channelList.isEmpty()) {
@@ -63,13 +62,13 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
         println("Task $name: baseApk: ${baseApk?.absolutePath}")
 
         // 3. check ChannelExtension
-        if (channelExtension == null) {
+        if (config == null) {
             println("Task $name: channel is null")
             return false
         }
 
-        channelExtension?.prepare()
-        println("Task $name: channel files outputDir: ${channelExtension?.outputDir?.absolutePath}")
+        prepare(config!!.outputDir)
+        println("Task $name: channel files outputDir: ${config?.outputDir?.absolutePath}")
         return true
     }
 
@@ -100,12 +99,12 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      * 根据签名类型生成不同的渠道包
      */
     private fun generateChannelApk() {
-        val outputDir = channelExtension?.outputDir
+        val outputDir = config?.outputDir
         println("generateChannelApk baseApk: ${baseApk?.absolutePath}, outputDir: ${outputDir?.path}")
 
         val signingConfig = variant?.signingConfig!!
-        val lowMemory = channelExtension?.lowMemory ?: false
-        val isFastMode = channelExtension?.fastMode ?: false
+        val lowMemory = config?.lowMemory ?: false
+        val isFastMode = config?.fastMode ?: false
 
         when {
             signingConfig.enableV2Signing.get() -> {
@@ -124,9 +123,9 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      * 获取渠道文件名
      */
     override fun getChannelApkName(baseApkName: String, channel: String): String {
-        var timeFormat = ChannelConfigExtension.DEFAULT_DATE_FORMAT
-        if (channelExtension?.buildTimeDateFormat!!.isNotEmpty())
-            timeFormat = channelExtension?.buildTimeDateFormat!!
+        var timeFormat = BuildChannelApkConfig.DEFAULT_DATE_FORMAT
+        if (config?.buildTimeDateFormat!!.isNotEmpty())
+            timeFormat = config?.buildTimeDateFormat!!
 
         val buildTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(timeFormat))
         val outInfo = variant?.outputs?.first()
@@ -141,9 +140,9 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
         values["buildTime"] = buildTime
 
         // 默认文件名
-        var apkName = ChannelConfigExtension.DEFAULT_APK_NAME_FORMAT
-        if (channelExtension?.apkNameFormat!!.isNotEmpty())
-            apkName = channelExtension?.apkNameFormat!!
+        var apkName = BuildChannelApkConfig.DEFAULT_APK_NAME_FORMAT
+        if (config?.apkNameFormat!!.isNotEmpty())
+            apkName = config?.apkNameFormat!!
 
         values.forEach { (k, v) ->
             apkName = apkName.replace("${'$'}{" + k + "}", v)
@@ -156,6 +155,6 @@ open class ApkChannelPackageTask : ChannelPackageTask() {
      * 获取渠道列表
      */
     override fun getExtensionChannelList(): List<String> {
-        return channelExtension?.getExtensionChannelList() ?: listOf()
+        return config?.getChannelList() ?: listOf()
     }
 }

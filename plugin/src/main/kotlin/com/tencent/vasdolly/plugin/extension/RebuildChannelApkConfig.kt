@@ -19,7 +19,7 @@ package com.tencent.vasdolly.plugin.extension
 import org.gradle.api.Project
 import java.io.File
 
-open class RebuildChannelConfigExtension(project: Project) : ConfigExtension(project) {
+open class RebuildChannelApkConfig(project: Project) : BaseConfig(project) {
     /**
      * base APK path
      */
