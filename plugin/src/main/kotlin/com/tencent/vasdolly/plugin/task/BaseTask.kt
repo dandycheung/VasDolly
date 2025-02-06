@@ -116,7 +116,7 @@ abstract class BaseTask : DefaultTask() {
 
         // 检查是否已经有渠道信息
         val apkChannel = ChannelReader.getChannelByV1(baseApk)
-        if (apkChannel != null && apkChannel.isNotEmpty())
+        if (apkChannel.isNotEmpty())
             throw GradleException("baseApk $baseApk.getAbsolutePath() has channel already")
 
         channelList.forEach { channel ->
